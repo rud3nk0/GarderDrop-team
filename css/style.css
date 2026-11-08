@@ -35,3 +35,8 @@ input,select{width:100%;min-height:48px;padding:0 14px;border-radius:14px;border
 .login .btn{margin-bottom:10px;text-align:left;display:flex;justify-content:space-between;align-items:center}.login .btn small{opacity:.85;font-weight:400}
 #toast{position:fixed;left:50%;bottom:calc(100px + var(--bot));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:.25s;font-size:15px;max-width:90%;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
+.inst .btn{justify-content:center;text-align:center}
+.guide{list-style:none;counter-reset:g;margin:0 0 16px;padding:6px 16px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:20px}
+.guide li{counter-increment:g;display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.guide li:last-child{border:0}
+.guide li:before{content:counter(g);flex:none;width:28px;height:28px;border-radius:50%;background:var(--g2);color:#fff;font-weight:700;display:grid;place-items:center;font-size:15px}
+.link{background:none;border:0;color:var(--mute);text-decoration:underline;font-size:15px;margin-top:8px;padding:12px}

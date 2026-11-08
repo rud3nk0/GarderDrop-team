@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   // DEMO: dane są zapisane tylko w przeglądarce tego urządzenia (localStorage).
-  var KEY = 'gdteam-v1', S, tab = '';
+  var KEY = 'gdteam-v1', INST = 'gdteam-installed', S, tab = '', skip = false, guide = false, deferred = null;
 
   function $(s) { return document.querySelector(s); }
   function esc(s) {
@@ -119,9 +119,38 @@
     return h;
   }
 
+  // ---- Ekran instalacji (tylko telefony) ----
+  var UA = navigator.userAgent || '';
+  var IOS = /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var MOBILE = IOS || /Android/i.test(UA);
+  function standalone() {
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  }
+  function installed() { try { return localStorage.getItem(INST) === '1'; } catch (e) { return false; } }
+  function setInstalled() { try { localStorage.setItem(INST, '1'); } catch (e) {} }
+  function needInstall() { return MOBILE && !standalone() && !installed() && !skip; }
+  var SHARE = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px"><path d="M12 3v12M8 7l4-4 4 4M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"/></svg>';
+  function installView() {
+    var steps = IOS
+      ? ['Kliknij ikonę „Udostępnij” ' + SHARE + ' na dole ekranu Safari.', 'Przewiń w dół i wybierz „Dodaj do ekranu początkowego”.', 'Kliknij „Dodaj”. Ikona pojawi się na ekranie głównym.']
+      : ['Kliknij menu przeglądarki ⋮ (prawy górny róg).', 'Wybierz „Zainstaluj aplikację” lub „Dodaj do ekranu głównego”.', 'Potwierdź. Ikona pojawi się na ekranie głównym.'];
+    return '<div class="login inst"><img src="img/icon-192.png" alt="" width="96" height="96"><h1>GardenDrop Team</h1>' +
+      '<p>Zainstaluj aplikację na telefonie, aby mieć ją zawsze pod ręką.</p>' +
+      (guide
+        ? '<ol class="guide">' + steps.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ol>' +
+          '<button class="btn" data-act="installdone">Gotowe, dodałem ikonę</button>' +
+          '<p class="note">Potem otwórz aplikację z ikony na ekranie głównym.</p>'
+        : '<button class="btn" data-act="install">📲 Dodaj do ekranu głównego</button>') +
+      '<button class="link" data-act="skipinstall">Kontynuuj w przeglądarce</button></div>';
+  }
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); deferred = e;
+  });
+  window.addEventListener('appinstalled', function () { setInstalled(); deferred = null; if (!me()) render(); });
+
   function render() {
     var u = me();
-    if (!u) { $('#app').innerHTML = loginView(); return; }
+    if (!u) { $('#app').innerHTML = needInstall() ? installView() : loginView(); return; }
     var tabs = TABS[u.role];
     if (!tabs.some(function (t) { return t[0] === tab; })) tab = tabs[0][0];
     $('#app').innerHTML = '<header class="bar"><div><b>GardenDrop Team</b><small>' + esc(u.name) + '</small></div>' +
@@ -135,7 +164,20 @@
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-act]'); if (!t) return;
     var a = t.dataset.act, id = t.dataset.id, u = me();
-    if (a === 'login') { S.me = id; tab = ''; save(); render(); }
+    if (a === 'install') {
+      if (deferred) {
+        deferred.prompt();
+        deferred.userChoice.then(function (c) {
+          deferred = null;
+          if (c && c.outcome === 'accepted') { setInstalled(); toast('Dodano! Otwórz aplikację z ekranu głównego'); }
+          else { guide = true; }
+          render();
+        });
+      } else { guide = true; render(); }
+    }
+    else if (a === 'installdone') { setInstalled(); render(); }
+    else if (a === 'skipinstall') { skip = true; render(); }
+    else if (a === 'login') { S.me = id; tab = ''; save(); render(); }
     else if (a === 'logout') { S.me = null; save(); render(); }
     else if (a === 'tab') { tab = t.dataset.t; render(); }
     else if (a === 'redeem') {
