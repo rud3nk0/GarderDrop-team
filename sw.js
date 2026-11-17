@@ -1,5 +1,5 @@
-var CACHE = 'gdteam-v2';
-var FILES = ['./', 'index.html', 'css/style.css', 'js/app.js', 'manifest.webmanifest', 'img/icon-192.png', 'img/icon-512.png', 'img/apple-touch-icon.png'];
+var CACHE = 'gdteam-v3';
+var FILES = ['./', 'index.html', 'css/style.css', 'js/app.js', 'manifest.webmanifest', 'img/icon-192.png', 'img/icon-512.png', 'img/apple-touch-icon.png', 'img/logo.jpg', 'img/dog.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }));
   self.skipWaiting();
